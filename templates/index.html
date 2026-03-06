@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dosya Analizi">
+    <title>🗂️ Akıllı Dosya Analizi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box;
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p { color: #666; font-size: 1.1rem; }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .toolbar-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        .toolbar-btn:hover { background: #5a6268; transform: translateY(-2px); }
+        .toolbar-btn.danger { background: #dc3545; }
+        .toolbar-btn.danger:hover { background: #c82333; }
+
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 3px dashed #ddd;
+            transition: all 0.3s ease;
+        }
+        .upload-section:hover { border-color: #667eea; background: #f0f4ff; }
+
+        .upload-zone { cursor: pointer; transition: transform 0.3s ease; }
+        .upload-zone:hover { transform: translateY(-5px); }
+
+        .upload-icon { font-size: 4rem; margin-bottom: 20px; color: #667eea; }
+
+        #fileInput, #cameraInput { display: none; }
+
+        .upload-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        .upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.3);
+        }
+
+        .file-info {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .analysis-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .analysis-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .analysis-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+        .analysis-btn:hover { transform: translateY(-2px); filter: brightness(0.9); }
+        .analysis-btn.summary  { background: #007bff; }
+        .analysis-btn.translate { background: #ffc107; color: #333; }
+        .analysis-btn.code_review { background: #dc3545; }
+        .analysis-btn.questions { background: #6f42c1; }
+
+        .model-section { margin-bottom: 15px; }
+        .model-selector-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .model-selector {
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 1rem;
+            flex: 1;
+        }
+        .refresh-models-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            min-width: 45px;
+        }
+        .refresh-models-btn:hover { background: #0056b3; transform: rotate(90deg); }
+
+        .model-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f1f3f4;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+        .status-indicator.loading  { color: #ffc107; }
+        .status-indicator.success  { color: #28a745; }
+        .status-indicator.error    { color: #dc3545; }
+        .status-indicator.warning  { color: #fd7e14; }
+        .status-text { font-weight: 500; }
+
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+        }
+        .result-text {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading { text-align: center; padding: 40px; display: none; }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .file-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .detail-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        .detail-label { font-weight: 600; color: #666; margin-bottom: 5px; }
+        .detail-value { font-size: 1.1rem; color: #333; }
+
+        .file-preview {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        .file-preview h4 { margin-bottom: 15px; color: #667eea; }
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        .preview-text {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .preview-table { max-height: 200px; overflow: auto; border: 1px solid #ddd; border-radius: 8px; }
+        .preview-table table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .preview-table th, .preview-table td { padding: 8px; border: 1px solid #eee; text-align: left; }
+        .preview-table th { background: #f8f9fa; font-weight: 600; }
+
+        @media (max-width: 768px) {
+            .container { padding: 20px; margin: 10px; }
+            .header h1 { font-size: 2rem; }
+            .analysis-buttons { flex-direction: column; }
+            .analysis-btn { min-width: unset; }
+        }
+    </style>
+    <!-- PWA -->
+    <link rel="icon" type="image/svg+xml" href="static/icon-192.svg">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <link rel="apple-touch-icon" href="static/icon-192.svg">
+    <meta name="application-name" content="Dosya Analizi">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dosya Analizi">
+</head>
+<body>
+    <div class="container">
+
+        <div class="header">
+            <h1>🗂️ Akıllı Dosya Analizi</h1>
+            <p>PDF, Word, Excel, resim ve kod dosyalarınızı AI ile analiz edin</p>
+        </div>
+
+        <div class="toolbar">
+            <button class="toolbar-btn" onclick="resetPage()">🔄 Yeni Dosya</button>
+            <button class="toolbar-btn danger" onclick="deleteCurrentFile()">🗑️ Dosyayı Sil</button>
+        </div>
+
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-zone">
+                <div class="upload-icon">📎</div>
+                <h3>Dosya Yükleyin</h3>
+                <p>PDF, DOCX, XLSX, JPG, PNG, TXT, PY, JS ve daha fazla format desteklenir</p>
+                <div style="display: flex; gap: 10px; justify-content: center; margin: 15px 0; flex-wrap: wrap;">
+                    <button class="upload-button" type="button"
+                        onclick="document.getElementById('fileInput').click()">
+                        📁 Dosya Seç
+                    </button>
+                    <button class="upload-button" type="button"
+                        onclick="document.getElementById('cameraInput').click()">
+                        📸 Kameradan Çek
+                    </button>
+                </div>
+                <input type="file" id="fileInput"
+                    accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.py,.js,.ts,.html,.css,.json,.xml,.yaml,.yml,.md,.jpg,.jpeg,.png,.gif,.bmp,.webp,.pptx">
+                <input type="file" id="cameraInput"
+                    accept="image/*" capture="camera" style="display:none;">
+                <p style="margin-top:12px; color:#999; font-size:0.9rem;">
+                    veya dosyayı sürükleyip bırakın
+                </p>
+            </div>
+        </div>
+
+        <div class="file-info" id="fileInfo">
+            <h3>📄 Dosya Bilgileri</h3>
+            <div class="file-details" id="fileDetails"></div>
+
+            <div class="file-preview" id="filePreview" style="display:none;">
+                <h4>👁️ Önizleme</h4>
+                <div id="previewContent"></div>
+            </div>
+
+            <div id="extractedContent"></div>
+        </div>
+
+        <div class="analysis-section" id="analysisSection">
+            <h3>🤖 AI Analizi</h3>
+            <div class="model-section">
+                <div class="model-selector-container">
+                    <select class="model-selector" id="modelSelect">
+                        <option value="">Model yükleniyor...</option>
+                    </select>
+                    <button class="refresh-models-btn" onclick="loadOllamaModels()" title="Modelleri Yenile">
+                        🔄
+                    </button>
+                </div>
+                <div class="model-status" id="modelStatus">
+                    <span class="status-indicator" id="statusIndicator">⏳</span>
+                    <span class="status-text" id="statusText">Modeller yükleniyor...</span>
+                </div>
+            </div>
+
+            <div class="analysis-buttons">
+                <button class="analysis-btn summary"     onclick="analyzeFile('summary')">📋 Özetle</button>
+                <button class="analysis-btn translate"   onclick="analyzeFile('translate')">🌐 Çevir</button>
+                <button class="analysis-btn code_review" onclick="analyzeFile('code_review')">🔍 Kod İnceleme</button>
+                <button class="analysis-btn questions"   onclick="analyzeFile('questions')">❓ Sorular Oluştur</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>AI analiz yapıyor, lütfen bekleyin...</p>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <h3 id="resultTitle">📊 Analiz Sonucu</h3>
+            <div class="result-text" id="resultText"></div>
+        </div>
+
+    </div><!-- /container -->
+
+    <script>
+        // Proxy altında çalışırken otomatik prefix (/dosya_analizi)
+        const API_BASE = window.location.pathname.startsWith('/dosya_analizi') ? '/dosya_analizi' : '';
+
+        let currentFileData = null;
+
+        document.addEventListener('DOMContentLoaded', () => loadOllamaModels());
+
+        // ── Model Yükleme ────────────────────────────────────────────────────
+        async function loadOllamaModels() {
+            const ind  = document.getElementById('statusIndicator');
+            const txt  = document.getElementById('statusText');
+            const sel  = document.getElementById('modelSelect');
+
+            ind.textContent = '⏳';
+            ind.className   = 'status-indicator loading';
+            txt.textContent = 'Modeller yükleniyor...';
+
+            // Groq modellerini her zaman başa ekle
+            sel.innerHTML = `
+                <optgroup label="☁️ Groq Cloud (Hızlı & Ücretsiz)">
+                    <option value="groq:vision">🖼️ Groq Vision — Llama 4 Scout (Resim Analizi)</option>
+                    <option value="groq:text">📝 Groq Metin — Llama 3.3 70B (Döküman Analizi)</option>
+                </optgroup>
+                <optgroup id="ollamaGroup" label="🖥️ Ollama (Yerel)">
+                </optgroup>`;
+
+            try {
+                const resp = await fetch(API_BASE + '/api/ollama_modeller');
+                const data = await resp.json();
+
+                const ollamaGroup = document.getElementById('ollamaGroup');
+
+                if (data.success && data.models && data.models.length > 0) {
+                    data.models.forEach(name => {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        let label = name;
+                        if (name.includes('gemma2:2b'))      label = 'Gemma 2 2B (Ultra Hızlı) ⚡⚡';
+                        else if (name.includes('gemma2:9b')) label = 'Gemma 2 9B (Hızlı & Kaliteli) ⚡';
+                        else if (name.includes('gemma2:27b'))label = 'Gemma 2 27B (En Kaliteli) 🏆';
+                        else if (name.includes('llama3.2:1b'))label= 'Llama 3.2 1B (Çok Hızlı) 🚀';
+                        else if (name.includes('llama3.2:3b'))label= 'Llama 3.2 3B (Hızlı) ⚡';
+                        else if (name.includes('qwen2.5:1.5b'))label='Qwen 2.5 1.5B (Ultra Hızlı) 🚀';
+                        else if (name.includes('qwen2.5:3b')) label='Qwen 2.5 3B (Hızlı) ⚡';
+                        else if (name.includes('qwen2.5:7b')) label='Qwen 2.5 7B (Güçlü) 💪';
+                        else if (name.includes('vision') || name.includes('llava')) label = name + ' (Resim Analizi) 👁️';
+                        opt.textContent = label;
+                        ollamaGroup.appendChild(opt);
+                    });
+
+                    if (data.warning) {
+                        ind.textContent = '✅'; ind.className = 'status-indicator success';
+                        txt.textContent = `Groq hazır · Ollama bağlantısı yok`;
+                    } else {
+                        ind.textContent = '✅'; ind.className = 'status-indicator success';
+                        txt.textContent = `Groq hazır · ${data.models.length} Ollama model`;
+                    }
+                } else {
+                    if (ollamaGroup) ollamaGroup.innerHTML = '<option disabled>(Ollama bağlı değil)</option>';
+                    ind.textContent = '✅'; ind.className = 'status-indicator success';
+                    txt.textContent = 'Groq hazır (Ollama bağlı değil)';
+                }
+                sel.selectedIndex = 0; // Groq Vision varsayılan
+            } catch (err) {
+                if (document.getElementById('ollamaGroup'))
+                    document.getElementById('ollamaGroup').innerHTML = '<option disabled>(Ollama bağlı değil)</option>';
+                ind.textContent = '✅'; ind.className = 'status-indicator success';
+                txt.textContent = 'Groq hazır (Ollama bağlantı hatası)';
+                sel.selectedIndex = 0;
+            }
+        }
+
+        // ── Event Listeners ──────────────────────────────────────────────────
+        document.getElementById('fileInput').addEventListener('change', e => {
+            const f = e.target.files[0];
+            if (f) uploadFile(f);
+        });
+
+        document.getElementById('cameraInput').addEventListener('change', e => {
+            const f = e.target.files[0];
+            if (!f) return;
+            uploadFile(f);
+            if (f.type.startsWith('image/')) {
+                setTimeout(() => extractTextFromImage(f), 1000);
+            }
+        });
+
+        // Drag & Drop
+        const uploadSection = document.getElementById('uploadSection');
+        uploadSection.addEventListener('dragover',  e => { e.preventDefault(); uploadSection.style.borderColor = '#667eea'; uploadSection.style.background = '#f0f4ff'; });
+        uploadSection.addEventListener('dragleave', e => { e.preventDefault(); uploadSection.style.borderColor = '#ddd';    uploadSection.style.background = '#f8f9fa'; });
+        uploadSection.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadSection.style.borderColor = '#ddd';
+            uploadSection.style.background  = '#f8f9fa';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) uploadFile(files[0]);
+        });
+
+        // ── Upload ───────────────────────────────────────────────────────────
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                showLoading(true);
+                hideResults();
+
+                const resp = await fetch(API_BASE + '/api/upload_file', { method: 'POST', body: formData });
+                const data = await resp.json();
+
+                if (data.success) {
+                    currentFileData = data;
+                    showFileInfo(data);
+                    showSuccess(`✅ ${data.original_name} başarıyla yüklendi!`);
+                    await autoExtractText(data.filename);
+                } else {
+                    showError(data.error || 'Dosya yüklenirken hata oluştu');
+                }
+            } catch (err) {
+                showError('Dosya yükleme hatası: ' + err.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function autoExtractText(filename) {
+            try {
+                const resp = await fetch(API_BASE + '/api/extract_text_from_file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename })
+                });
+                const result = await resp.json();
+
+                if (result.success && result.text) {
+                    document.getElementById('extractedContent').innerHTML = `
+                        <div style="margin-top:20px;">
+                            <h4>📄 Çıkarılan Metin:</h4>
+                            <div style="background:white;border-radius:10px;padding:15px;border-left:4px solid #007bff;margin-top:10px;max-height:300px;overflow-y:auto;">
+                                <pre style="white-space:pre-wrap;font-family:inherit;margin:0;font-size:14px;">${escapeHtml(result.text)}</pre>
+                            </div>
+                        </div>`;
+                    currentFileData.extracted_text = result.text;
+                }
+            } catch (err) {
+                console.error('Metin çıkarma hatası:', err);
+            }
+        }
+
+        function showFileInfo(data) {
+            const sel = document.getElementById('modelSelect');
+            if (data.file_type === 'image') {
+                // Groq Vision'ı seç (daima ilk sırada)
+                sel.value = 'groq:vision';
+            } else {
+                // Metin/döküman için Groq Metin
+                if (sel.value === 'groq:vision') sel.value = 'groq:text';
+            }
+
+            document.getElementById('fileDetails').innerHTML = `
+                <div class="detail-item"><div class="detail-label">Dosya Adı</div><div class="detail-value">${data.original_name}</div></div>
+                <div class="detail-item"><div class="detail-label">Dosya Tipi</div><div class="detail-value">${getFileTypeIcon(data.file_type)} ${data.file_type}</div></div>
+                <div class="detail-item"><div class="detail-label">Boyut</div><div class="detail-value">${data.size || 'Bilinmiyor'}</div></div>
+                <div class="detail-item"><div class="detail-label">Durum</div><div class="detail-value">✅ Yüklendi</div></div>`;
+
+            showFilePreview(data);
+
+            document.getElementById('fileInfo').style.display      = 'block';
+            document.getElementById('analysisSection').style.display = 'block';
+        }
+
+        function showFilePreview(data) {
+            const previewContent = document.getElementById('previewContent');
+            const filePreview    = document.getElementById('filePreview');
+            let html = '';
+
+            if (data.file_type === 'image') {
+                html = `<img src="${data.file_path}" alt="Önizleme" class="preview-image" onclick="window.open('${data.file_path}','_blank')">`;
+            } else if (data.file_type === 'spreadsheet' && data.extracted_text) {
+                const lines = data.extracted_text.split('\n').slice(0, 8);
+                html = `<div class="preview-table"><table>
+                    ${lines.map((line, i) => {
+                        const cells = line.split(/[|\t,]/).slice(0, 6);
+                        const tag   = i === 0 ? 'th' : 'td';
+                        return `<tr>${cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('')}</tr>`;
+                    }).join('')}
+                </table></div>`;
+            } else if (data.extracted_text) {
+                const preview = data.extracted_text.length > 800
+                    ? data.extracted_text.substring(0, 800) + '...'
+                    : data.extracted_text;
+                html = `<div class="preview-text">${escapeHtml(preview)}</div>`;
+            }
+
+            if (html) {
+                previewContent.innerHTML = html;
+                filePreview.style.display = 'block';
+            } else {
+                filePreview.style.display = 'none';
+            }
+        }
+
+        // ── Analiz ───────────────────────────────────────────────────────────
+        async function analyzeFile(analysisType) {
+            if (!currentFileData) { showError('Önce bir dosya yükleyin'); return; }
+            if (analysisType === 'translate') { await translateFile(); return; }
+
+            try {
+                showLoading(true);
+                hideResults();
+                const model = document.getElementById('modelSelect').value;
+
+                const resp = await fetch(API_BASE + '/api/ai_analyze_file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: currentFileData.filename, analysis_type: analysisType, model })
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    if (data.model && data.model !== model) showModelFallbackMessage(model, data.model);
+                    showResult(data.analysis || data.result, analysisType, data.model || model);
+                } else {
+                    showError(data.error || 'AI analizi sırasında hata oluştu');
+                }
+            } catch (err) {
+                showError('Analiz hatası: ' + err.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function translateFile() {
+            if (!currentFileData?.extracted_text) {
+                showError('Önce bir dosya yükleyin ve metin çıkarılsın');
+                return;
+            }
+            try {
+                showLoading(true);
+                hideResults();
+                const resp = await fetch(API_BASE + '/api/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: currentFileData.extracted_text.substring(0, 10000),
+                        source_lang: 'tr',
+                        target_lang: 'en'
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showResult(data.translated_text, 'translate', `Çeviri (${data.source_lang} → ${data.target_lang})`);
+                } else {
+                    showError(data.error || 'Çeviri sırasında hata oluştu');
+                }
+            } catch (err) {
+                showError('Çeviri hatası: ' + err.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ── OCR (kameradan) ──────────────────────────────────────────────────
+        async function extractTextFromImage(file) {
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const resp = await fetch(API_BASE + '/api/extract_text', { method: 'POST', body: formData });
+                const data = await resp.json();
+                if (data.success && (data.text || data.extracted_text)) {
+                    const text = data.text || data.extracted_text;
+                    document.getElementById('extractedContent').innerHTML = `
+                        <h4>📄 OCR ile Çıkarılan Metin:</h4>
+                        <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:5px;padding:15px;margin:10px 0;max-height:300px;overflow-y:auto;">
+                            <pre style="white-space:pre-wrap;margin:0;font-family:inherit;">${escapeHtml(text)}</pre>
+                        </div>`;
+                    if (currentFileData) currentFileData.extracted_text = text;
+                }
+            } catch (err) {
+                console.error('OCR hatası:', err);
+            }
+        }
+
+        // ── Araç Çubuğu ──────────────────────────────────────────────────────
+        function resetPage() {
+            currentFileData = null;
+            document.getElementById('fileInfo').style.display       = 'none';
+            document.getElementById('analysisSection').style.display = 'none';
+            document.getElementById('resultSection').style.display   = 'none';
+            document.getElementById('extractedContent').innerHTML     = '';
+            document.getElementById('fileInput').value               = '';
+            document.getElementById('cameraInput').value             = '';
+            removeMessages();
+        }
+
+        async function deleteCurrentFile() {
+            if (!currentFileData) { showError('Silinecek dosya yok'); return; }
+            if (!confirm(`"${currentFileData.original_name}" silinsin mi?`)) return;
+            try {
+                const resp = await fetch(`${API_BASE}/api/delete_file/${currentFileData.filename}`, { method: 'DELETE' });
+                const data = await resp.json();
+                if (data.success) { showSuccess('✅ Dosya silindi'); resetPage(); }
+                else showError(data.error);
+            } catch (err) {
+                showError('Silme hatası: ' + err.message);
+            }
+        }
+
+        // ── Yardımcılar ──────────────────────────────────────────────────────
+        function showModelFallbackMessage(original, actual) {
+            const ind = document.getElementById('statusIndicator');
+            const txt = document.getElementById('statusText');
+            ind.textContent = '⚠️'; ind.className = 'status-indicator warning';
+            txt.textContent = `${original} → ${actual} (otomatik değişim)`;
+            setTimeout(() => {
+                ind.textContent = '✅'; ind.className = 'status-indicator success';
+                txt.textContent = 'Model aktif';
+            }, 5000);
+        }
+
+        function showResult(analysis, analysisType, model) {
+            const typeNames = { summary:'📋 Özet', translate:'🌐 Çeviri', code_review:'🔍 Kod İnceleme', questions:'❓ Sorular' };
+            document.getElementById('resultTitle').textContent = `${typeNames[analysisType] || '📊 Analiz'} (${model})`;
+            document.getElementById('resultText').textContent  = analysis;
+            document.getElementById('resultSection').style.display = 'block';
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function hideResults() {
+            document.getElementById('resultSection').style.display = 'none';
+        }
+
+        function showError(msg) {
+            removeMessages();
+            const el = document.createElement('div');
+            el.className = 'error'; el.textContent = msg;
+            document.querySelector('.container').appendChild(el);
+            setTimeout(() => el.remove(), 5000);
+        }
+
+        function showSuccess(msg) {
+            removeMessages();
+            const el = document.createElement('div');
+            el.className = 'success'; el.textContent = msg;
+            document.querySelector('.container').appendChild(el);
+            setTimeout(() => el.remove(), 5000);
+        }
+
+        function removeMessages() {
+            document.querySelectorAll('.error, .success').forEach(el => el.remove());
+        }
+
+        function getFileTypeIcon(type) {
+            return { pdf:'📕', document:'📄', spreadsheet:'📊', image:'🖼️',
+                     text:'📝', presentation:'📊', unknown:'📎' }[type] || '📎';
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+    </script>
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(r => console.log('[PWA] SW aktif:', r.scope))
+                .catch(e => console.warn('[PWA] SW hatasi:', e));
+        });
+    }
+    </script>
+
+<!-- PWA Install Banner -->
+<div id="pwa-install-banner" style="
+    display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:rgba(20,20,30,0.96); color:#fff; border-radius:16px;
+    padding:14px 22px; box-shadow:0 8px 32px rgba(0,0,0,0.45);
+    z-index:99999; align-items:center; gap:14px;
+    font-family:-apple-system,system-ui,sans-serif; font-size:15px;
+    backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.12);
+    max-width:92vw; white-space:nowrap;">
+  <span style="font-size:22px">📲</span>
+  <span>Bu uygulamayı yükle</span>
+  <button id="pwa-install-btn" style="
+      background:linear-gradient(135deg,#667eea,#764ba2); color:#fff;
+      border:none; border-radius:10px; padding:8px 18px; font-size:14px;
+      font-weight:600; cursor:pointer; white-space:nowrap;">
+    Yükle
+  </button>
+  <button id="pwa-install-close" style="
+      background:rgba(255,255,255,0.15); color:#fff; border:none;
+      border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;">
+    ✕
+  </button>
+</div>
+<script>
+(function(){
+  const DISMISSED_KEY = 'pwa_install_dismissed';
+  let deferredPrompt = null;
+  const banner = document.getElementById('pwa-install-banner');
+  const installBtn = document.getElementById('pwa-install-btn');
+  const closeBtn = document.getElementById('pwa-install-close');
+
+  // Zaten yuklu mu?
+  if (window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true) return;
+
+  // Daha once kapatildiysa gosterme
+  if (sessionStorage.getItem(DISMISSED_KEY)) return;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    banner.style.display = 'flex';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    banner.style.display = 'none';
+    if (outcome === 'accepted') sessionStorage.setItem(DISMISSED_KEY, '1');
+  });
+
+  closeBtn.addEventListener('click', () => {
+    banner.style.display = 'none';
+    sessionStorage.setItem(DISMISSED_KEY, '1');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    banner.style.display = 'none';
+  });
+})();
+</script>
+
+</body>
+</html>
