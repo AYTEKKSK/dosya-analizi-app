@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: dosya-analizi-app
+    runtime: python
+    buildCommand: pip install -r requirements.txt && apt-get update && apt-get install -y tesseract-ocr tesseract-ocr-tur
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: TESSERACT_PATH
+        value: "/usr/bin/tesseract"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: "3.11.6"
