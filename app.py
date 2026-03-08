@@ -15,11 +15,6 @@ from werkzeug.utils import secure_filename
 import os
 import io
 import mimetypes
-import PyPDF2
-import openpyxl
-import pandas as pd
-from docx import Document
-from pptx import Presentation
 from datetime import datetime
 
 # --- Groq API helper ---
@@ -109,6 +104,7 @@ def extract_text_from_path(filepath):
 
         # ── PDF ──────────────────────────────────────────────────────────────
         elif ext == 'pdf':
+            import PyPDF2
             with open(filepath, 'rb') as f:
                 reader = PyPDF2.PdfReader(f)
                 parts = [page.extract_text() or '' for page in reader.pages]
@@ -116,6 +112,7 @@ def extract_text_from_path(filepath):
 
         # ── Word ─────────────────────────────────────────────────────────────
         elif ext == 'docx':
+            from docx import Document
             doc = Document(filepath)
             parts = [p.text for p in doc.paragraphs if p.text.strip()]
             for table in doc.tables:
@@ -128,6 +125,7 @@ def extract_text_from_path(filepath):
         # ── Excel ─────────────────────────────────────────────────────────────
         elif ext in ['xlsx', 'xls']:
             if ext == 'xlsx':
+                import openpyxl
                 wb = openpyxl.load_workbook(filepath, data_only=True)
                 parts = []
                 for sname in wb.sheetnames:
@@ -138,6 +136,7 @@ def extract_text_from_path(filepath):
                             parts.append(row_str)
                 text = '\n'.join(parts)
             else:
+                import pandas as pd
                 df = pd.read_excel(filepath, sheet_name=None)
                 parts = []
                 for sname, sheet in df.items():
@@ -147,6 +146,7 @@ def extract_text_from_path(filepath):
 
         # ── PowerPoint ────────────────────────────────────────────────────────
         elif ext == 'pptx':
+            from pptx import Presentation
             prs = Presentation(filepath)
             parts = []
             for i, slide in enumerate(prs.slides, 1):
